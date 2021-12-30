@@ -1,0 +1,26 @@
+--- 
+clone: 
+  depth: 1
+kind: pipeline
+name: RyuuPipeline
+concurrency:
+  limit: 6
+steps: 
+  - 
+    environment: 
+      BOT_TOKEN:
+        from_secret: BOT_TOKEN
+      GIT_SECRET:
+        from_secret: GIT_SECRET
+      GIT_SECRETB:
+        from_secret: GIT_SECRETB
+      GIT_USERNAME:
+        from_secret: GIT_USERNAME
+      SDCLANGPASS:
+        from_secret: SDCLANGPASS
+    image: zycromerz/kerneldocker:v3
+    name: RyuujiX-Build
+    commands: 
+      - ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime && date
+      - apt-get -y update && apt-get -y upgrade && apt-get -y install tzdata git automake lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng bc libstdc++6 libncurses5 wget python3 python3-pip python gcc clang lld libc6-dev libssl-dev rsync flex git-lfs libz3-dev libz3-4 axel tar && python3 -m pip install networkx
+      - "bash ./main.sh"
