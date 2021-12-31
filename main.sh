@@ -87,17 +87,7 @@ CompileKernel(){
     [[ "$(pwd)" != "${kernelDir}" ]] && cd "${kernelDir}"
 	GetKernelInfo
 	export KBUILD_BUILD_HOST="KereAktif"
-		MAKE+=(
-				ARCH=arm \
-				SUBARCH=arm \
-				PATH=$clangDir/bin:$gcc32Dir/bin:/usr/bin:${PATH} \
-				CC=clang \
-				CROSS_COMPILE_ARM32=arm-linux-androideabi- \
-				CLANG_TRIPLE=armv7-linux-gnueabi- \
-				HOSTCC=gcc \
-				HOSTCXX=g++
-			)
-    rm -rf out
+    mkdir out
     BUILD_START=$(date +"%s")
 		if [ ! -z "${CIRCLE_BRANCH}" ];then
             BuildNumber="${CIRCLE_BUILD_NUM}"
@@ -120,7 +110,7 @@ CompileKernel(){
 			SUBARCH=arm \
 			PATH=$clangDir/bin:$gcc32Dir/bin:/usr/bin:${PATH} \
 			CC=clang \
-			CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+			CROSS_COMPILE=arm-linux-androideabi- \
 			CLANG_TRIPLE=armv7-linux-gnueabi- \
 			HOSTCC=gcc \
 			HOSTCXX=g++
@@ -216,3 +206,6 @@ git clone https://github.com/RyuujiX/AnyKernel3 -b gucci $AnykernelDir --depth=1
 	export KBUILD_BUILD_USER="RyuujiX"
 
 getInfo '>> Script Initialized ! <<'
+
+getInfo ">> Starting Build . . . . <<"
+CompileKernel
