@@ -87,7 +87,10 @@ CompileKernel(){
     [[ "$(pwd)" != "${kernelDir}" ]] && cd "${kernelDir}"
 	GetKernelInfo
 	export KBUILD_BUILD_HOST="KereAktif"
-    mkdir out
+	export USE_CCACHE=1
+	export ARCH=arm
+	export SUBARCH=arm
+	export CROSS_COMPILE=$gcc32Dir/bin/$for32-
     BUILD_START=$(date +"%s")
 		if [ ! -z "${CIRCLE_BRANCH}" ];then
             BuildNumber="${CIRCLE_BUILD_NUM}"
@@ -104,16 +107,13 @@ CompileKernel(){
         MSG="<b>🔨 Compiling Kernel....</b>%0A<b>Device: Redmi Note 1S</b>%0A<b>Codename: gucci</b>%0A<b>Compile Date: $GetCBD </b>%0A<b>Kernel Name: $KName</b>%0A<b>Kernel Version: $KVer</b>%0A<b>Total Cores: $TotalCores</b>%0A<b>Last Commit-Message: $HeadCommitMsg </b>%0A<b>Compile Link Progress:</b><a href='$ProgLink'> Check Here </a>%0A<b>Compiler Info: </b>%0A<code>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>%0A<code>- Google GCC 4.9 </code>%0A<code>- $gcc32Type </code>%0A<code>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>%0A%0A $MessageTag"
         tg_send_info "$MSG" 
 
-		make -j${TotalCores}  O=out ARCH="arm" "$DEFCONFIG"
-		make -j${TotalCores}  O=out \
-			ARCH=arm \
-			SUBARCH=arm \
-			PATH=$gcc32Dir/bin:/usr/bin:${PATH} \
-			CROSS_COMPILE=$for32-
+		make -j${TotalCores}  ARCH=arm CROSS_COMPILE=$gcc32Dir/bin/$for32- "$DEFCONFIG"
+		make -j${TotalCores}
 			
     BUILD_END=$(date +"%s")
     DIFF=$((BUILD_END - BUILD_START))
-	if [[ ! -e $kernelDir/out/arch/arm/boot/Image.gz-dtb ]];then
+	
+	if [ ! -f $kernelDir/arch/arm/boot/zImage ];then
 		getInfoErr ">> Compile Failed ! Aborting . . . . <<"
 		SID="CAACAgUAAxkBAAIb12By2GpymhVy7G9g1Y5D2FcgvYr7AALZAQAC4dzJVslZcFisbk9nHgQ"
         MSG="<b>❌ Compile failed</b>%0AKernel Name : <b>${KName}</b>%0A- <code>$((DIFF / 60)) minute(s) $((DIFF % 60)) second(s)</code>%0A%0ASad Boy"
@@ -123,7 +123,23 @@ CompileKernel(){
         exit -1
 	else
 		getInfo ">> Compiled Succesfully ! <<"
-        cp -af $kernelDir/out/arch/arm/boot/Image.gz-dtb $AnykernelDir
+        cp -af $kernelDir/arch/arm/boot/zImage $AnykernelDir
+	fi
+	
+	getInfo ">> Building DTB .... <<"
+	chmod +x ./dtbToolCM
+	./dtbToolCM -2 -o ./arch/arm/boot/dt.img -s 2048 -p ./scripts/dtc/ ./arch/arm/boot/dts/
+	if [ ! -e $kernelDir/arch/arm/boot/dt.img ];then
+		getInfoErr ">> DTB Build Failed ! Aborting . . . . <<"
+		SID="CAACAgUAAxkBAAIb12By2GpymhVy7G9g1Y5D2FcgvYr7AALZAQAC4dzJVslZcFisbk9nHgQ"
+        MSG="<b>❌ DTB Build failed</b>%0AKernel Name : <b>${KName}</b>%0A- <code>$((DIFF / 60)) minute(s) $((DIFF % 60)) second(s)</code>%0A%0ASad Boy"
+		
+        tg_send_info "$MSG" 
+		tg_send_sticker "$SID"
+        exit -1
+	else
+		getInfo ">> DTB Builded Succesfully ! <<"
+		cp -af $kernelDir/arch/arm/boot/dt.img $AnykernelDir/dtb
 	fi
 		
 		ZipName="$KName-$KVer.zip"
