@@ -101,19 +101,15 @@ CompileKernel(){
         fi
 		
 		MessageTag="#PRIVATE #HMP"
-        MSG="<b>🔨 Compiling Kernel....</b>%0A<b>Device: Redmi Note 1S</b>%0A<b>Codename: gucci</b>%0A<b>Compile Date: $GetCBD </b>%0A<b>Kernel Name: $KName</b>%0A<b>Kernel Version: $KVer</b>%0A<b>Total Cores: $TotalCores</b>%0A<b>Last Commit-Message: $HeadCommitMsg </b>%0A<b>Compile Link Progress:</b><a href='$ProgLink'> Check Here </a>%0A<b>Compiler Info: </b>%0A<code>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>%0A<code>- $ClangType </code>%0A<code>- $gcc32Type </code>%0A<code>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>%0A%0A $MessageTag"
+        MSG="<b>🔨 Compiling Kernel....</b>%0A<b>Device: Redmi Note 1S</b>%0A<b>Codename: gucci</b>%0A<b>Compile Date: $GetCBD </b>%0A<b>Kernel Name: $KName</b>%0A<b>Kernel Version: $KVer</b>%0A<b>Total Cores: $TotalCores</b>%0A<b>Last Commit-Message: $HeadCommitMsg </b>%0A<b>Compile Link Progress:</b><a href='$ProgLink'> Check Here </a>%0A<b>Compiler Info: </b>%0A<code>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>%0A<code>- Google GCC 4.9 </code>%0A<code>- $gcc32Type </code>%0A<code>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>%0A%0A $MessageTag"
         tg_send_info "$MSG" 
 
 		make -j${TotalCores}  O=out ARCH="arm" "$DEFCONFIG"
 		make -j${TotalCores}  O=out \
 			ARCH=arm \
 			SUBARCH=arm \
-			PATH=$clangDir/bin:$gcc32Dir/bin:/usr/bin:${PATH} \
-			CC=clang \
-			CROSS_COMPILE=arm-linux-androideabi- \
-			CLANG_TRIPLE=armv7-linux-gnueabi- \
-			HOSTCC=gcc \
-			HOSTCXX=g++
+			PATH=$gcc32Dir/bin:/usr/bin:${PATH} \
+			CROSS_COMPILE=$for32-
 			
     BUILD_END=$(date +"%s")
     DIFF=$((BUILD_END - BUILD_START))
@@ -154,7 +150,6 @@ getInfo '>> Initializing Script... <<'
 
 mainDir=$PWD
 kernelDir=$mainDir/kernel
-clangDir=$mainDir/clang
 gcc32Dir=$mainDir/gcc32
 AnykernelDir=$mainDir/Anykernel3
 
@@ -164,16 +159,9 @@ git config --global user.email "$GIT_EMAIL"
 getInfo ">> Cloning Kernel Source . . . <<"
 git clone https://github.com/RyuujiX/android_kernel_xiaomi_gucci -b r1/s $kernelDir
 
-mkdir "${clangDir}"
-rm -rf $clangDir/*
-if [ ! -e "${mainDir}/SDClang.zip" ];then
-getInfo ">> Downloading Snapdragon Clang 14 . . . <<"
-wget -q  https://github.com/ZyCromerZ/Clang/releases/download/sdclang-14-release/SDClang-14.0.0.zip -O "SDClang.zip"
-fi
-getInfo ">> Extracting Snapdragon Clang 14 . . . <<"
-unzip -P ${SDCLANGPASS} SDClang.zip -d $clangDir
 getInfo ">> Cloning gcc32 . . . <<"
-git clone https://github.com/RyuujiX/arm-linux-androideabi-4.9/ -b android-12.0.0_r15 $gcc32Dir --depth=1
+git clone https://github.com/RyuujiX/arm-linux-androideabi-4.9/ -b android-10.0.0_r47 $gcc32Dir --depth=1
+for32=arm-linux-androideabi
 getInfo ">> cloning Anykernel . . . <<"
 git clone https://github.com/RyuujiX/AnyKernel3 -b gucci $AnykernelDir --depth=1
 
@@ -195,8 +183,7 @@ git clone https://github.com/RyuujiX/AnyKernel3 -b gucci $AnykernelDir --depth=1
     cd $mainDir
 
 ## Get Toolchain Version
-        ClangType=$("$clangDir"/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
-    if [ -e $gcc32Dir/bin/$for32-gcc ];then
+	if [ -e $gcc32Dir/bin/$for32-gcc ];then
         gcc32Type="$($gcc32Dir/bin/$for32-gcc --version | head -n 1)"
     else
         cd $gcc32Dir
