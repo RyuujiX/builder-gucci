@@ -123,7 +123,7 @@ CompileKernel(){
         exit -1
 	else
 		getInfo ">> Compiled Succesfully ! <<"
-        cp -af $kernelDir/arch/arm/boot/zImage $AnykernelDir
+        cp -af $kernelDir/arch/arm/boot/zImage $AnykernelDir/anykernel
 	fi
 	
 	getInfo ">> Building DTB .... <<"
@@ -139,7 +139,7 @@ CompileKernel(){
         exit -1
 	else
 		getInfo ">> DTB Builded Succesfully ! <<"
-		cp -af $kernelDir/arch/arm/boot/dt.img $AnykernelDir/dtb
+		cp -af $kernelDir/arch/arm/boot/dt.img $AnykernelDir/anykernel/dtb
 	fi
 		
 		ZipName="$KName-$KVer.zip"
@@ -150,8 +150,9 @@ CompileKernel(){
 # Modify AnyKernel
 ModAnyKernel(){
 	getInfo ">> Modifying info . . . . <<"
-	cd $AnykernelDir
+	cd $AnykernelDir/anykernel
 	sed -i "s/kernel.string=.*/kernel.string=$KName/g" anykernel.sh
+	cd $AnykernelDir
 }
 
 # Packing kernel
